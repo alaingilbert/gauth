@@ -117,6 +117,15 @@ func main() {
 	cfgReader.Comma = ':'
 
 	cfg, e := cfgReader.ReadAll()
+
+	maxNameLength := 10
+	for _, record := range cfg {
+		name := record[0]
+		if len(name) > maxNameLength {
+			maxNameLength = len(name)
+		}
+	}
+
 	if e != nil {
 		log.Fatal(e)
 	}
@@ -125,14 +134,18 @@ func main() {
 	prevTS := currentTS - 1
 	nextTS := currentTS + 1
 
-	fmt.Println("           prev   curr   next")
+	header := strings.Repeat(" ", maxNameLength)
+	header += " prev   curr   next"
+
+	fmt.Println(header)
 	for _, record := range cfg {
 		name := record[0]
 		secret := normalizeSecret(record[1])
 		prevToken := authCodeOrDie(secret, prevTS)
 		currentToken := authCodeOrDie(secret, currentTS)
 		nextToken := authCodeOrDie(secret, nextTS)
-		fmt.Printf("%-10s %s %s %s\n", name, prevToken, currentToken, nextToken)
+		fmtString := fmt.Sprintf("%%-%ds %%s %%s %%s\n", maxNameLength)
+		fmt.Printf(fmtString, name, prevToken, currentToken, nextToken)
 	}
 	fmt.Printf("[%-29s]\n", strings.Repeat("=", progress))
 }
